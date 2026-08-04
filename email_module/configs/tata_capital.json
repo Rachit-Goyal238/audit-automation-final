@@ -1,0 +1,50 @@
+{
+    "client": "TATA Capital",
+
+    "sheets": {
+        "checklist": "Checklist",
+        "score": "Score Parameters"
+    },
+
+    "audit_details": {
+        "Agency Code": "D2",
+        "Agency Name": "D3",
+        "Agency Address": "D4",
+        "Type of Agency": "D5",
+        "Auditor Name": "G2",
+        "Audit Date": "G3",
+        "Collection Manager": "G4",
+        "Agency Manager": "G5"
+    },
+
+    "checklist": {
+        "table_start_search": "Sr.No.",
+
+        "filter": {
+            "column": "Compliance status (Yes / No)",
+            "value": "No"
+        },
+
+        "columns": {
+            "sr_no": "Sr.No.",
+            "rating_category": "Rating Category",
+            "short_segmentation": "Short Segmentation",
+            "observation": "Observation",
+            "pending_status": "Pending Status (Open/ Closed)"
+        }
+    },
+
+    "score_parameters": {
+        "table_start_search": "Sr. No."
+    },
+
+    "email": {
+        "subject_format": "Collection Agency Audit Report | {Agency Name} | {Agency Code}",
+
+        "placeholders": {
+            "audit_details": "{{AUDIT_DETAILS}}",
+            "observations": "{{OBSERVATIONS}}",
+            "score_table": "{{SCORE_TABLE}}"
+        }
+    }
+}

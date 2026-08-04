@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<style>
+
+body{
+    font-family:Calibri,Arial,sans-serif;
+    font-size:15px;
+    color:#000;
+    line-height:1.35;
+}
+
+table{
+    border-collapse:collapse;
+    margin-bottom: 15px; /* Adds a controlled, clean space directly below every table */
+}
+
+
+</style>
+
+</head>
+
+<body>
+
+<p>Dear Sir,</p>
+
+<p>
+Greetings of the day!
+</p>
+
+<p>
+This is to apprise you that the scheduled agency audit was successfully
+performed on <b>{{ audit_date }}</b>. Based on the audit parameters,
+the agency obtained <b>"{{ final_rating }}"</b> rating.
+</p>
+
+<p>
+Below are the critical observations identified,
+and the detailed audit sheet with artifacts is also attached
+for your reference:
+</p>
+
+{{ audit_details_table }}
+
+<!-- Removed <br> tags. CSS now handles the gaps safely -->
+<h3 style="
+    font-size:15px !important;
+    font-family:Calibri, Arial, sans-serif;
+    font-weight:bold;
+    margin:15px 0 8px 0;
+    line-height:1.2;
+">
+    <u>Allocation :</u>
+</h3>
+
+<h3 style="
+    font-size:15px !important;
+    font-family:Calibri, Arial, sans-serif;
+    font-weight:bold;
+    margin:15px 0 8px 0;
+    line-height:1.2;
+">
+    <u>Key Observations:</u>
+</h3>
+
+{{ observations_table }}
+
+<h3 style="
+    font-size:15px !important;
+    font-family:Calibri, Arial, sans-serif;
+    font-weight:bold;
+    margin:15px 0 8px 0;
+    line-height:1.2;
+">
+    <u>Parameter-wise Scoring and Rating:</u>
+</h3>
+
+{{ score_table }}
+
+<p>
+Please share your remarks on each point with the resolution
+for closure of the audit query within <b>07 days.</b>
+</p>
+
+</body>
+
+</html>
