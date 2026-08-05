@@ -116,33 +116,25 @@ import shutil
 import subprocess
 import os
 
-
 def excel_to_pdf(
     excel_path,
     pdf_path
 ):
+    # Check for both "libreoffice" and "soffice" for Linux/Render compatibility
+    soffice_path = shutil.which("libreoffice") or shutil.which("soffice")
 
-    soffice_path = shutil.which(
-        "soffice"
-    )
-
+    # Fallback to local Windows paths if neither is found in the system PATH
     if not soffice_path:
-
         possible_paths = [
             r"C:\Program Files\LibreOffice\program\soffice.exe",
             r"C:\Program Files (x86)\LibreOffice\program\soffice.exe"
         ]
-
         for path in possible_paths:
-
             if os.path.exists(path):
-
                 soffice_path = path
-
                 break
 
     if not soffice_path:
-
         raise Exception(
             "LibreOffice not installed"
         )
@@ -171,12 +163,7 @@ def excel_to_pdf(
         )[0] + ".pdf"
     )
 
-    if os.path.abspath(
-        generated_pdf
-    ) != os.path.abspath(
-        pdf_path
-    ):
-
+    if os.path.abspath(generated_pdf) != os.path.abspath(pdf_path):
         os.replace(
             generated_pdf,
             pdf_path
