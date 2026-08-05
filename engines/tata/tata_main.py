@@ -1,6 +1,7 @@
 import os
 import json
 import pandas as pd
+import gc
 
 from openpyxl import load_workbook
 
@@ -56,13 +57,17 @@ def generate_report(
     populate_checklist(ws, audit_df)
     
     # ---------------------------------------------------------
-    # FIX 1: THE PAGE SPILL FIX
+    # FIX 1: THE PRINT AREA & PAGE SPILL FIX
     # ---------------------------------------------------------
     try:
         # This boolean MUST be true, otherwise fitToWidth is ignored
         ws.sheet_properties.pageSetUpPr.fitToPage = True 
     except Exception:
         pass
+        
+    # Explicitly define the print area so LibreOffice respects the width
+    ws.print_area = ws.dimensions
+    
     ws.page_setup.fitToWidth = 1
     ws.page_setup.fitToHeight = 0 
     
@@ -82,6 +87,17 @@ def generate_report(
 
     print(generated_excel)
     print("Excel workbook created")
+
+    # ---------------------------------------------------------
+    # NEW CODE: AGGRESSIVE MEMORY DUMP BEFORE LIBREOFFICE BOOTS
+    # ---------------------------------------------------------
+    print("Dumping RAM...")
+    del wb
+    del ws
+    del df
+    del audit_df
+    gc.collect() # Force Python to immediately return RAM to the OS
+    # ---------------------------------------------------------
 
     excel_to_pdf(generated_excel, generated_pdf)
     print("PDF created")

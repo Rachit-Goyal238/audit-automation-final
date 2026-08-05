@@ -4,6 +4,7 @@ import os
 import zipfile
 import json
 import fitz  # PyMuPDF is used for PDF compression
+import gc    # <-- NEW IMPORT for Garbage Collection
 from engines.tata.tata_main import generate_report
 
 from email_module.ui import upload as email_config
@@ -129,16 +130,29 @@ with tab_generate:
                     master_path = os.path.join(temp_dir, master_file.name)
                     with open(master_path, "wb") as f:
                         f.write(master_file.getbuffer())
+                    
+                    # --- NEW CODE: Delete file buffer from RAM immediately ---
+                    del master_file 
 
                     report_path = os.path.join(temp_dir, report_pdf.name)
                     with open(report_path, "wb") as f:
                         f.write(report_pdf.getbuffer())
+                        
+                    # --- NEW CODE: Delete file buffer from RAM immediately ---
+                    del report_pdf 
 
                     annexure_path = None
                     if annexure_pdf:
                         annexure_path = os.path.join(temp_dir, annexure_pdf.name)
                         with open(annexure_path, "wb") as f:
                             f.write(annexure_pdf.getbuffer())
+                            
+                        # --- NEW CODE: Delete file buffer from RAM immediately ---
+                        del annexure_pdf 
+                    
+                    # --- NEW CODE: Force memory sweep before LibreOffice boots ---
+                    gc.collect()
+                    # -------------------------------------------------------------
 
                     with st.spinner("Generating report..."):
                         result = generate_report(
