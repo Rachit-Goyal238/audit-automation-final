@@ -1,5 +1,5 @@
 # Use an official lightweight Python image
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 # Install LibreOffice (required for PDF generation) and clean up cache
 RUN apt-get update && \
