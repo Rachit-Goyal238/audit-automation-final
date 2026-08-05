@@ -86,15 +86,16 @@ def login():
 
         key = save_token(session["google_token"])
 
-        streamlit_url = os.getenv(
-            "STREAMLIT_URL",
+        # Updated to FRONTEND_URL to match your Render Environment Variables
+        frontend_url = os.getenv(
+            "FRONTEND_URL",
             "http://localhost:8501"
         )
 
         logger.info("Redirecting using existing session.")
 
         return redirect(
-            f"{streamlit_url}/?token={key}"
+            f"{frontend_url}/?token={key}"
         )
 
     logger.info("No existing session. Redirecting to Google.")
@@ -115,12 +116,13 @@ def logout():
 
     logger.info("User logged out.")
 
-    streamlit_url = os.getenv(
-        "STREAMLIT_URL",
+    # Updated to FRONTEND_URL
+    frontend_url = os.getenv(
+        "FRONTEND_URL",
         "http://localhost:8501"
     )
 
-    return redirect(streamlit_url)
+    return redirect(frontend_url)
 
 
 @app.route("/authorize")
@@ -134,15 +136,16 @@ def authorize():
 
         key = save_token(token)
 
-        streamlit_url = os.getenv(
-            "STREAMLIT_URL",
+        # Updated to FRONTEND_URL
+        frontend_url = os.getenv(
+            "FRONTEND_URL",
             "http://localhost:8501"
         )
 
         logger.info("Redirecting authenticated user back to Streamlit.")
 
         return redirect(
-            f"{streamlit_url}/?token={key}"
+            f"{frontend_url}/?token={key}"
         )
 
     except Exception:
