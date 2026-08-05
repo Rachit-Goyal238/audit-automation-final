@@ -193,11 +193,25 @@ if __name__ == "__main__":
     )
 
     try:
-        # Give LibreOffice 3 seconds to fully initialize the socket
-        time.sleep(3)
+        # Give LibreOffice 5 seconds to fully initialize the socket (Render servers can be slow)
+        time.sleep(5)
 
-        # 3. Execute the PyUNO script using the container's Python environment
-        subprocess.run(["python3", pyuno_script, excel_abs, pdf_abs], check=True)
+        # 3. Execute using the OS Python (/usr/bin/python3) which contains the 'uno' module
+        # We inject the PYTHONPATH so it finds the Debian packages, and capture the exact error output
+        env = os.environ.copy()
+        env["PYTHONPATH"] = "/usr/lib/python3/dist-packages"
+        
+        result = subprocess.run(
+            ["/usr/bin/python3", pyuno_script, excel_abs, pdf_abs], 
+            capture_output=True,
+            text=True,
+            env=env
+        )
+        
+        if result.returncode != 0:
+            # This will now print the EXACT error to your Render logs instead of a generic Exit 1
+            raise Exception(f"PyUNO Script Failed!\nError: {result.stderr}\nOutput: {result.stdout}")
+
     finally:
         # 4. Terminate LibreOffice and delete the temporary script
         lo_process.terminate()
