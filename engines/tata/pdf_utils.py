@@ -120,10 +120,8 @@ def excel_to_pdf(
     excel_path,
     pdf_path
 ):
-    # Check for both "libreoffice" and "soffice" for Linux/Render compatibility
     soffice_path = shutil.which("libreoffice") or shutil.which("soffice")
 
-    # Fallback to local Windows paths if neither is found in the system PATH
     if not soffice_path:
         possible_paths = [
             r"C:\Program Files\LibreOffice\program\soffice.exe",
@@ -135,15 +133,10 @@ def excel_to_pdf(
                 break
 
     if not soffice_path:
-        raise Exception(
-            "LibreOffice not installed"
-        )
+        raise Exception("LibreOffice not installed")
 
-    output_dir = os.path.dirname(
-        os.path.abspath(pdf_path)
-    )
+    output_dir = os.path.dirname(os.path.abspath(pdf_path))
 
-    # Convert directly to PDF since Python has already calculated the math
     subprocess.run(
         [
             soffice_path,
@@ -163,7 +156,4 @@ def excel_to_pdf(
     )
 
     if os.path.abspath(generated_pdf) != os.path.abspath(pdf_path):
-        os.replace(
-            generated_pdf,
-            pdf_path
-        )
+        os.replace(generated_pdf, pdf_path)
