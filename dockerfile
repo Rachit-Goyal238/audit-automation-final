@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 8501
 
 # Run the Streamlit app, binding to Render's dynamic PORT environment variable
-CMD sh -c "streamlit run app.py --server.port ${PORT:-8501} --server.address 0.0.0.0"
+CMD sh -c "streamlit run app.py --server.port ${PORT:-8501} --server.address 0.0.0.0 --server.fileWatcherType none"
