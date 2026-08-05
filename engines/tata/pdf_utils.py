@@ -115,11 +115,9 @@ def merge_pdfs(pdf1, pdf2, pdf3, output_pdf):
 import shutil
 import subprocess
 import os
+import time
 
-def excel_to_pdf(
-    excel_path,
-    pdf_path
-):
+def excel_to_pdf(excel_path, pdf_path):
     soffice_path = shutil.which("libreoffice") or shutil.which("soffice")
 
     if not soffice_path:
@@ -136,24 +134,73 @@ def excel_to_pdf(
         raise Exception("LibreOffice not installed")
 
     output_dir = os.path.dirname(os.path.abspath(pdf_path))
+    excel_abs = os.path.abspath(excel_path)
+    pdf_abs = os.path.abspath(pdf_path)
 
-    subprocess.run(
+    # 1. Dynamically write the PyUNO script to force calculation and scaling
+    pyuno_script = os.path.join(output_dir, "pyuno_converter.py")
+    with open(pyuno_script, "w") as f:
+        f.write("""
+import uno
+from com.sun.star.beans import PropertyValue
+import os
+import sys
+
+def convert(input_excel, output_pdf):
+    try:
+        localContext = uno.getComponentContext()
+        resolver = localContext.ServiceManager.createInstanceWithContext("com.sun.star.bridge.UnoUrlResolver", localContext)
+        
+        # Connect to the background LibreOffice instance
+        ctx = resolver.resolve("uno:socket,host=127.0.0.1,port=2002;urp;StarOffice.ComponentContext")
+        desktop = ctx.ServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", ctx)
+
+        # UpdateDocMode 3 forces LibreOffice to update cross-sheet links and cache
+        inProps = (
+            PropertyValue("Hidden", 0, True, 0),
+            PropertyValue("UpdateDocMode", 0, 3, 0) 
+        )
+        
+        url = uno.systemPathToFileUrl(os.path.abspath(input_excel))
+        doc = desktop.loadComponentFromURL(url, "_blank", 0, inProps)
+
+        # Force a full recalculation of all IFS and SUMIF formulas
+        doc.calculateAll()
+
+        # Export to PDF preserving the layout
+        outProps = (
+            PropertyValue("FilterName", 0, "calc_pdf_Export", 0),
+        )
+        outUrl = uno.systemPathToFileUrl(os.path.abspath(output_pdf))
+        doc.storeToURL(outUrl, outProps)
+        doc.close(True)
+        
+    except Exception as e:
+        print(f"PyUNO Error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    convert(sys.argv[1], sys.argv[2])
+""")
+
+    # 2. Boot LibreOffice in the background listening on port 2002
+    lo_process = subprocess.Popen(
         [
-            soffice_path,
-            "--headless",
-            "--convert-to",
-            "pdf",
-            os.path.abspath(excel_path),
-            "--outdir",
-            output_dir
-        ],
-        check=True
+            soffice_path, "--headless", "--invisible", "--nocrashreport", 
+            "--nodefault", "--nofirststartwizard", "--nologo", "--norestore", 
+            "--accept=socket,host=127.0.0.1,port=2002;urp;"
+        ]
     )
 
-    generated_pdf = os.path.join(
-        output_dir,
-        os.path.splitext(os.path.basename(excel_path))[0] + ".pdf"
-    )
+    try:
+        # Give LibreOffice 3 seconds to fully initialize the socket
+        time.sleep(3)
 
-    if os.path.abspath(generated_pdf) != os.path.abspath(pdf_path):
-        os.replace(generated_pdf, pdf_path)
+        # 3. Execute the PyUNO script using the container's Python environment
+        subprocess.run(["python3", pyuno_script, excel_abs, pdf_abs], check=True)
+    finally:
+        # 4. Terminate LibreOffice and delete the temporary script
+        lo_process.terminate()
+        lo_process.wait()
+        if os.path.exists(pyuno_script):
+            os.remove(pyuno_script)
