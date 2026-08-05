@@ -142,18 +142,14 @@ def excel_to_pdf(
     output_dir = os.path.dirname(
         os.path.abspath(pdf_path)
     )
-    
-    base_name = os.path.splitext(os.path.basename(excel_path))[0]
-    ods_path = os.path.join(output_dir, f"{base_name}.ods")
 
-    # STEP 1: Convert .xlsx to .ods
-    # This forces LibreOffice to fully parse and evaluate all Excel formulas naturally
+    # Convert directly to PDF since Python has already calculated the math
     subprocess.run(
         [
             soffice_path,
             "--headless",
             "--convert-to",
-            "ods",
+            "pdf",
             os.path.abspath(excel_path),
             "--outdir",
             output_dir
@@ -161,27 +157,9 @@ def excel_to_pdf(
         check=True
     )
 
-    # STEP 2: Convert the evaluated .ods file to .pdf
-    subprocess.run(
-        [
-            soffice_path,
-            "--headless",
-            "--convert-to",
-            "pdf",
-            os.path.abspath(ods_path),
-            "--outdir",
-            output_dir
-        ],
-        check=True
-    )
-
-    # Clean up the temporary .ods file so it doesn't clutter your server
-    if os.path.exists(ods_path):
-        os.remove(ods_path)
-
     generated_pdf = os.path.join(
         output_dir,
-        f"{base_name}.pdf"
+        os.path.splitext(os.path.basename(excel_path))[0] + ".pdf"
     )
 
     if os.path.abspath(generated_pdf) != os.path.abspath(pdf_path):
