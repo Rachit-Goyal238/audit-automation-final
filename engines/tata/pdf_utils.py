@@ -137,7 +137,7 @@ def excel_to_pdf(excel_path, pdf_path):
     excel_abs = os.path.abspath(excel_path)
     pdf_abs = os.path.abspath(pdf_path)
 
-    # 1. Dynamically write the PyUNO script to force calculation and scaling
+    # 1. Dynamically write the PyUNO script with a Connection Retry Loop
     pyuno_script = os.path.join(output_dir, "pyuno_converter.py")
     with open(pyuno_script, "w") as f:
         f.write("""
@@ -145,17 +145,27 @@ import uno
 from com.sun.star.beans import PropertyValue
 import os
 import sys
+import time
 
 def convert(input_excel, output_pdf):
     try:
         localContext = uno.getComponentContext()
         resolver = localContext.ServiceManager.createInstanceWithContext("com.sun.star.bridge.UnoUrlResolver", localContext)
         
-        # Connect to the background LibreOffice instance
-        ctx = resolver.resolve("uno:socket,host=127.0.0.1,port=2002;urp;StarOffice.ComponentContext")
+        # Retry loop: wait for LibreOffice to finish booting
+        ctx = None
+        for _ in range(10):
+            try:
+                ctx = resolver.resolve("uno:socket,host=127.0.0.1,port=2002;urp;StarOffice.ComponentContext")
+                break
+            except Exception:
+                time.sleep(1)
+                
+        if not ctx:
+            raise Exception("Could not connect to LibreOffice after 10 seconds.")
+
         desktop = ctx.ServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", ctx)
 
-        # UpdateDocMode 3 forces LibreOffice to update cross-sheet links and cache
         inProps = (
             PropertyValue("Hidden", 0, True, 0),
             PropertyValue("UpdateDocMode", 0, 3, 0) 
@@ -164,10 +174,8 @@ def convert(input_excel, output_pdf):
         url = uno.systemPathToFileUrl(os.path.abspath(input_excel))
         doc = desktop.loadComponentFromURL(url, "_blank", 0, inProps)
 
-        # Force a full recalculation of all IFS and SUMIF formulas
         doc.calculateAll()
 
-        # Export to PDF preserving the layout
         outProps = (
             PropertyValue("FilterName", 0, "calc_pdf_Export", 0),
         )
@@ -183,21 +191,28 @@ if __name__ == "__main__":
     convert(sys.argv[1], sys.argv[2])
 """)
 
-    # 2. Boot LibreOffice in the background listening on port 2002
+    # 2. Boot LibreOffice with a unique, writable temporary profile so it doesn't crash
+    profile_path = f"file:///tmp/libreoffice_profile_{time.time()}"
     lo_process = subprocess.Popen(
         [
-            soffice_path, "--headless", "--invisible", "--nocrashreport", 
-            "--nodefault", "--nofirststartwizard", "--nologo", "--norestore", 
+            soffice_path, 
+            f"-env:UserInstallation={profile_path}",
+            "--headless", 
+            "--invisible", 
+            "--nocrashreport", 
+            "--nodefault", 
+            "--nofirststartwizard", 
+            "--nologo", 
+            "--norestore", 
             "--accept=socket,host=127.0.0.1,port=2002;urp;"
         ]
     )
 
     try:
-        # Give LibreOffice 5 seconds to fully initialize the socket (Render servers can be slow)
-        time.sleep(5)
+        # Give LibreOffice a short head start
+        time.sleep(2)
 
-        # 3. Execute using the OS Python (/usr/bin/python3) which contains the 'uno' module
-        # We inject the PYTHONPATH so it finds the Debian packages, and capture the exact error output
+        # 3. Execute using the OS Python (/usr/bin/python3)
         env = os.environ.copy()
         env["PYTHONPATH"] = "/usr/lib/python3/dist-packages"
         
@@ -209,11 +224,10 @@ if __name__ == "__main__":
         )
         
         if result.returncode != 0:
-            # This will now print the EXACT error to your Render logs instead of a generic Exit 1
             raise Exception(f"PyUNO Script Failed!\nError: {result.stderr}\nOutput: {result.stdout}")
 
     finally:
-        # 4. Terminate LibreOffice and delete the temporary script
+        # 4. Terminate LibreOffice and clean up files
         lo_process.terminate()
         lo_process.wait()
         if os.path.exists(pyuno_script):
