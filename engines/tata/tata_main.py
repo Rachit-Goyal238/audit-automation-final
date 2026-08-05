@@ -1,6 +1,7 @@
 import os
 import json
 import pandas as pd
+import formulas  # <-- NEW IMPORT
 
 from openpyxl import load_workbook
 
@@ -72,8 +73,8 @@ def generate_report(
     ).strip()
 
     paths = create_output_paths(
-    agency_code,
-    agency_name
+        agency_code,
+        agency_name
     )
 
     generated_excel = paths["excel"]
@@ -93,15 +94,16 @@ def generate_report(
     ws = wb[checklist_sheet]
 
     populate_headers(
-    ws,
-    first_row,
-    pdf_data
-)
+        ws,
+        first_row,
+        pdf_data
+    )
 
     populate_checklist(
-    ws,
-    audit_df
-)
+        ws,
+        audit_df
+    )
+    
     wb.calculation.fullCalcOnLoad = True
     wb.calculation.forceFullCalc = True
     wb.save(
@@ -109,10 +111,21 @@ def generate_report(
     )
 
     print(generated_excel)
-    
-    print(
-        "Excel workbook created"
-    )
+    print("Excel workbook created")
+
+    # ---------------------------------------------------------
+    # NEW CODE: Force Python to calculate formulas and save values
+    # ---------------------------------------------------------
+    try:
+        print("Calculating formulas...")
+        xl_model = formulas.ExcelModel().loads(generated_excel).finish()
+        xl_model.calculate()
+        # This overwrites the file with the calculated values
+        xl_model.write(dirpath=os.path.dirname(generated_excel)) 
+        print("Formulas calculated successfully.")
+    except Exception as e:
+        print(f"Warning: Formula calculation encountered an error: {e}")
+    # ---------------------------------------------------------
 
     print(generated_excel)
     print(os.path.exists(generated_excel))
@@ -122,30 +135,23 @@ def generate_report(
         generated_pdf
     )
 
-    print(
-        "PDF created"
-    )
+    print("PDF created")
 
     extract_evidence_pages(
         pdf_file,
         evidence_pdf
     )
 
-    print(
-        "Evidence PDF created"
-    )
+    print("Evidence PDF created")
 
     if annexure_pdf:
-
         merge_pdfs(
             generated_pdf,
             evidence_pdf,
             annexure_pdf,
             final_report_pdf
         )
-
     else:
-
         merge_pdfs(
             generated_pdf,
             evidence_pdf,
@@ -153,9 +159,7 @@ def generate_report(
             final_report_pdf
         )
 
-    print(
-        "Final report created"
-    )
+    print("Final report created")
 
     return {
         "excel": generated_excel,
