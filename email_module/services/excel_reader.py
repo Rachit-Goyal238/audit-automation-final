@@ -24,59 +24,61 @@ class ExcelReader:
         self.workbook: Workbook | None = None
 
     def load(self) -> Workbook:
-        """
-        Load the workbook, forcing formula calculation via LibreOffice if available.
-        """
+            """
+            Load the workbook, forcing formula calculation via LibreOffice if available.
+            """
+            try:
+                # Handle both physical file paths and io.BytesIO (from our Streamlit integration)
+                if isinstance(self.file_path, io.BytesIO):
+                    input_bytes = self.file_path.getvalue()
+                else:
+                    with open(self.file_path, "rb") as f:
+                        input_bytes = f.read()
 
-        try:
-            # Handle both physical file paths and io.BytesIO (from our Streamlit integration)
-            if isinstance(self.file_path, io.BytesIO):
-                input_bytes = self.file_path.getvalue()
-            else:
-                with open(self.file_path, "rb") as f:
-                    input_bytes = f.read()
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    input_path = os.path.join(temp_dir, "raw_workbook.xlsx")
+                    
+                    with open(input_path, "wb") as f:
+                        f.write(input_bytes)
 
-            with tempfile.TemporaryDirectory() as temp_dir:
-                input_path = os.path.join(temp_dir, "raw_workbook.xlsx")
-                
-                with open(input_path, "wb") as f:
-                    f.write(input_bytes)
+                    # 1. CREATE A DEDICATED OUTPUT DIRECTORY
+                    out_dir = os.path.join(temp_dir, "calculated")
+                    os.makedirs(out_dir)
 
-                # Force formula calculation using LibreOffice headless mode
-                try:
-                    subprocess.run(
-                        [
-                            "libreoffice",
-                            "--headless",
-                            "--nologo",
-                            "--nofirststartwizard",
-                            "--convert-to", "xlsx",
-                            "--outdir", temp_dir,
-                            input_path
-                        ],
-                        check=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE
+                    # Force formula calculation using LibreOffice headless mode
+                    try:
+                        subprocess.run(
+                            [
+                                "libreoffice",
+                                "--headless",
+                                "--nologo",
+                                "--nofirststartwizard",
+                                "--convert-to", "xlsx",
+                                "--outdir", out_dir,  # 2. POINT TO THE NEW DIRECTORY
+                                input_path
+                            ],
+                            check=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE
+                        )
+                    except FileNotFoundError:
+                        pass
+                    except subprocess.CalledProcessError as e:
+                        print(f"LibreOffice calculation failed: {e}")
+
+                    # 3. LOAD THE CALCULATED FILE FROM THE NEW DIRECTORY
+                    calculated_path = os.path.join(out_dir, "raw_workbook.xlsx")
+                    
+                    # Now load it with data_only=True to grab the freshly cached values
+                    self.workbook = load_workbook(
+                        filename=calculated_path,
+                        data_only=True
                     )
-                except FileNotFoundError:
-                    # Libreoffice is not installed locally; will proceed without calculation
-                    pass
-                except subprocess.CalledProcessError as e:
-                    print(f"LibreOffice calculation failed: {e}")
 
-                # The output calculated file will have the exact same name in the temp dir
-                calculated_path = os.path.join(temp_dir, "raw_workbook.xlsx")
-                
-                # Now load it with data_only=True to grab the freshly cached values
-                self.workbook = load_workbook(
-                    filename=calculated_path,
-                    data_only=True
-                )
+                return self.workbook
 
-            return self.workbook
-
-        except Exception as e:
-            raise Exception(f"Unable to open workbook.\n{e}")
+            except Exception as e:
+                raise Exception(f"Unable to open workbook.\n{e}")
 
     def get_sheet(self, sheet_name: str) -> Worksheet:
         """
