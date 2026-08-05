@@ -4,16 +4,15 @@ import fitz
 import pandas as pd
 import json
 import subprocess
+import shutil
+import time
 
 from pypdf import PdfReader, PdfWriter
 
 
 def extract_pdf_header(pdf_path):
-
     pdf = fitz.open(pdf_path)
-
     page = pdf[0]
-
     text = page.get_text()
 
     lines = [
@@ -25,30 +24,19 @@ def extract_pdf_header(pdf_path):
     data = {}
 
     for i, line in enumerate(lines):
-
         try:
-
             if line == "AGENCY NAME":
                 data["agency_name"] = lines[i + 1]
 
             elif line == "OPERATING ADDRESS":
-
                 address_lines = []
-
                 j = i + 1
-
                 while j < len(lines):
-
                     if lines[j] == "CURRENT EMAIL ID":
                         break
-
                     address_lines.append(lines[j])
-
                     j += 1
-
-                data["operating_address"] = " ".join(
-                    address_lines
-                )
+                data["operating_address"] = " ".join(address_lines)
 
             elif line == "TYPE OF AGENCY":
                 data["agency_type"] = lines[i + 1]
@@ -63,27 +51,17 @@ def extract_pdf_header(pdf_path):
             pass
 
     pdf.close()
-
     return data
 
 def extract_evidence_pages(input_pdf, output_pdf):
-
     pdf = fitz.open(input_pdf)
-
     evidence_pdf = fitz.open()
 
     for page_num in range(len(pdf)):
-
         page = pdf[page_num]
-
         text = page.get_text()
 
-        if re.search(
-            r"Observation\s*#?\s*\d+",
-            text,
-            re.IGNORECASE
-        ):
-
+        if re.search(r"Observation\s*#?\s*\d+", text, re.IGNORECASE):
             evidence_pdf.insert_pdf(
                 pdf,
                 from_page=page_num,
@@ -91,31 +69,22 @@ def extract_evidence_pages(input_pdf, output_pdf):
             )
 
     evidence_pdf.save(output_pdf)
-
     evidence_pdf.close()
     pdf.close()
 
 def merge_pdfs(pdf1, pdf2, pdf3, output_pdf):
-
     writer = PdfWriter()
 
     for pdf_file in [pdf1, pdf2, pdf3]:
-
         if not pdf_file:
             continue
         
         reader = PdfReader(pdf_file)
-
         for page in reader.pages:
             writer.add_page(page)
 
     with open(output_pdf, "wb") as output_file:
         writer.write(output_file)
-
-import shutil
-import subprocess
-import os
-import time
 
 def excel_to_pdf(excel_path, pdf_path):
     soffice_path = shutil.which("libreoffice") or shutil.which("soffice")
@@ -154,7 +123,7 @@ def convert(input_excel, output_pdf):
         
         # Retry loop: wait for LibreOffice to finish booting
         ctx = None
-        for _ in range(10):
+        for _ in range(60):  # INCREASED TO 60 SECONDS
             try:
                 ctx = resolver.resolve("uno:socket,host=127.0.0.1,port=2002;urp;StarOffice.ComponentContext")
                 break
@@ -162,7 +131,7 @@ def convert(input_excel, output_pdf):
                 time.sleep(1)
                 
         if not ctx:
-            raise Exception("Could not connect to LibreOffice after 10 seconds.")
+            raise Exception("Could not connect to LibreOffice after 60 seconds.")
 
         desktop = ctx.ServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", ctx)
 
@@ -175,6 +144,14 @@ def convert(input_excel, output_pdf):
         doc = desktop.loadComponentFromURL(url, "_blank", 0, inProps)
 
         doc.calculateAll()
+
+        # --- FORCE FORMULA CALCULATION ---
+        smgr = localContext.ServiceManager
+        dispatcher = smgr.createInstanceWithContext("com.sun.star.frame.DispatchHelper", localContext)
+        frame = doc.CurrentController.Frame
+        dispatcher.executeDispatch(frame, ".uno:Calculate", "", 0, ())
+        dispatcher.executeDispatch(frame, ".uno:UpdateAll", "", 0, ())
+        # ---------------------------------
 
         outProps = (
             PropertyValue("FilterName", 0, "calc_pdf_Export", 0),
