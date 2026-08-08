@@ -20,10 +20,13 @@ def render():
     excel_file = io.BytesIO(downloads["excel"])
     excel_file.name = downloads["excel_name"]
 
+    # Get the metadata that was stored in the session from the report generation step
+    metadata = st.session_state.get("report_metadata", {})
+
     # Prevent rebuilding every rerun
     if email.get("result") is None or email.get("filename") != excel_file.name:
         with st.spinner("Extracting data and generating Email Preview..."):
-            builder = EmailBuilder(excel_file)
+            builder = EmailBuilder(excel_file, metadata)
             result = builder.build()
 
         email["result"] = result

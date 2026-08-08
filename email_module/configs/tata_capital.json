@@ -39,7 +39,7 @@
     },
 
     "email": {
-        "subject_format": "Collection Agency Audit Report | {Agency Name} | {Agency Code}",
+        "subject_format": "{Report Type} Audit Report || {Location} || {Agency Name} || {Agency Code} || {Product}",
 
         "placeholders": {
             "audit_details": "{{AUDIT_DETAILS}}",

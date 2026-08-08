@@ -125,5 +125,10 @@ def generate_report(
         "excel": generated_excel,
         "pdf": generated_pdf,
         "evidence": evidence_pdf,
-        "final": final_report_pdf
+        "final": final_report_pdf,
+        "metadata": {
+            "location": location,
+            "report_type": report_type,
+            "product": product
+        }
     }
