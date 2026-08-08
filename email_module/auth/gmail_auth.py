@@ -6,7 +6,7 @@ from google.oauth2.credentials import Credentials
 
 CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-OAUTH_URL = os.getenv("OAUTH_URL", "http://localhost:5000")
+OAUTH_URL = os.getenv("INTERNAL_OAUTH_URL", os.getenv("OAUTH_URL", "http://localhost:5000"))
 
 
 class GmailAuthenticator:

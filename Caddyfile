@@ -1,0 +1,13 @@
+129-225-95-203.sslip.io {
+    # Route all authentication endpoints to Flask
+    reverse_proxy /login* audit-container:5000
+    reverse_proxy /logout* audit-container:5000
+    reverse_proxy /authorize* audit-container:5000
+    reverse_proxy /token* audit-container:5000
+
+    # Route the main app interface to Streamlit
+    reverse_proxy audit-container:8501 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+}
