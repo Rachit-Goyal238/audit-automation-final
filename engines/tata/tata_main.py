@@ -1,25 +1,13 @@
 import os
 import json
-import gc
 import pandas as pd
+import gc
 
 from openpyxl import load_workbook
 
-from engines.tata.report_utils import (
-    create_output_paths
-)
-
-from engines.tata.pdf_utils import (
-    extract_pdf_header,
-    extract_evidence_pages,
-    merge_pdfs,
-    excel_to_pdf
-)
-
-from engines.tata.excel_utils import (
-    populate_headers,
-    populate_checklist
-)
+from engines.tata.report_utils import create_output_paths
+from engines.tata.pdf_utils import extract_pdf_header, extract_evidence_pages, merge_pdfs, excel_to_pdf
+from engines.tata.excel_utils import populate_headers, populate_checklist
 
 def generate_report(
     audit_id,
@@ -30,11 +18,7 @@ def generate_report(
     annexure_pdf=None
 ):
 
-    with open(
-        "templates.json",
-        "r",
-        encoding="utf-8"
-    ) as f:
+    with open("templates.json", "r", encoding="utf-8") as f:
         template_repository = json.load(f)
 
     template_file = template_repository[client][template_type]
@@ -42,50 +26,28 @@ def generate_report(
     output_folder = "output"
     os.makedirs(output_folder, exist_ok=True)
 
-    df = pd.read_excel(
-        master_file,
-        dtype=str,
-        keep_default_na=False
-    )
-
+    df = pd.read_excel(master_file, dtype=str, keep_default_na=False)
     df.columns = df.columns.str.strip()
 
-    audit_df = df[
-        df["Audit ID"].astype(str).str.strip() == audit_id
-    ]
+    audit_df = df[df["Audit ID"].astype(str).str.strip() == audit_id]
 
     if audit_df.empty:
-        raise Exception(
-            f"Audit ID '{audit_id}' not found"
-        )
+        raise Exception(f"Audit ID '{audit_id}' not found")
 
     print(f"Found {len(audit_df)} records")
 
     first_row = audit_df.iloc[0]
-
-    # Combined Data Extraction
     agency_code = str(first_row["Agency Code"]).strip()
     agency_name = str(first_row["Agency Name"]).strip()
-    location = str(first_row["Location"]).strip()
 
-    pdf_data = extract_pdf_header(pdf_file)
-
-    report_type = pdf_data.get("agency_type", "Unknown_Type")
-    product = pdf_data.get("product", "Unknown_Product")
-
-    # Detailed path creation from Version 1
-    paths = create_output_paths(
-        agency_code=agency_code,
-        agency_name=agency_name,
-        location=location,
-        report_type=report_type,
-        product=product
-    )
+    paths = create_output_paths(agency_code, agency_name)
 
     generated_excel = paths["excel"]
     generated_pdf = paths["pdf"]
     evidence_pdf = paths["evidence"]
     final_report_pdf = paths["final"]
+
+    pdf_data = extract_pdf_header(pdf_file)
 
     wb = load_workbook(template_file)
     checklist_sheet = wb.sheetnames[0]
@@ -93,7 +55,7 @@ def generate_report(
 
     populate_headers(ws, first_row, pdf_data)
     populate_checklist(ws, audit_df)
-
+    
     # ---------------------------------------------------------
     # FIX 1: THE PRINT AREA & PAGE SPILL FIX
     # ---------------------------------------------------------
@@ -119,15 +81,12 @@ def generate_report(
                 cell.value = cell.value 
     
     wb.calculation.fullCalcOnLoad = True
-    wb.calculation.forceFullCalc = True
     wb.calculation.calcMode = 'auto'
-    
     wb.save(generated_excel)
     wb.close()
 
     print(generated_excel)
     print("Excel workbook created")
-    print(os.path.exists(generated_excel))
 
     # ---------------------------------------------------------
     # NEW CODE: AGGRESSIVE MEMORY DUMP BEFORE LIBREOFFICE BOOTS
@@ -140,32 +99,16 @@ def generate_report(
     gc.collect() # Force Python to immediately return RAM to the OS
     # ---------------------------------------------------------
 
-    excel_to_pdf(
-        generated_excel,
-        generated_pdf
-    )
+    excel_to_pdf(generated_excel, generated_pdf)
     print("PDF created")
 
-    extract_evidence_pages(
-        pdf_file,
-        evidence_pdf
-    )
+    extract_evidence_pages(pdf_file, evidence_pdf)
     print("Evidence PDF created")
 
     if annexure_pdf:
-        merge_pdfs(
-            generated_pdf,
-            evidence_pdf,
-            annexure_pdf,
-            final_report_pdf
-        )
+        merge_pdfs(generated_pdf, evidence_pdf, annexure_pdf, final_report_pdf)
     else:
-        merge_pdfs(
-            generated_pdf,
-            evidence_pdf,
-            None,
-            final_report_pdf
-        )
+        merge_pdfs(generated_pdf, evidence_pdf, None, final_report_pdf)
 
     print("Final report created")
 

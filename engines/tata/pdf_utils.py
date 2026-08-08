@@ -6,8 +6,7 @@ import json
 import subprocess
 import shutil
 import time
-import platform
-import sys
+
 from pypdf import PdfReader, PdfWriter
 
 
@@ -48,9 +47,6 @@ def extract_pdf_header(pdf_path):
             elif line == "AGENCY MANAGER":
                 data["agency_manager"] = lines[i + 1]
 
-            elif line == "PRODUCT":
-                data["product"] = lines[i + 1]
-
         except IndexError:
             pass
 
@@ -65,7 +61,7 @@ def extract_evidence_pages(input_pdf, output_pdf):
         page = pdf[page_num]
         text = page.get_text()
 
-        if re.search(r"Observation\s*x?\s*\d+", text, re.IGNORECASE):
+        if re.search(r"Observation\s*#?\s*\d+", text, re.IGNORECASE):
             evidence_pdf.insert_pdf(
                 pdf,
                 from_page=page_num,
