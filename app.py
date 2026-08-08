@@ -91,6 +91,8 @@ if "email_data" not in st.session_state:
         "file_bytes": None,
         "attachments": []
     }
+if "report_metadata" not in st.session_state:
+    st.session_state.report_metadata = {}
 
 tab_generate, tab_email = st.tabs(["1. Generate Report", "2. Dispatch Email"])
 
@@ -158,6 +160,8 @@ with tab_generate:
                         result = generate_report(
                             audit_id, master_path, client, template_type, report_path, annexure_path
                         )
+
+                    st.session_state.report_metadata = result.get("metadata", {})
 
                     # --- COMPRESS THE FINAL PDF BEFORE PACKAGING ---
                     with st.spinner("Compressing final report for email limits..."):
