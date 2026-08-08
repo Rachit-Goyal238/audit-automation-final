@@ -1,28 +1,28 @@
 import os
+import re
 
 def create_output_paths(
-    agency_code,
     agency_name,
+    agency_code,
+    location,
+    report_type,
+    product,
     output_folder="output"
 ):
-
     os.makedirs(
         output_folder,
         exist_ok=True
     )
 
-    safe_agency_name = "".join(
-        c if c.isalnum() or c in (" ", "_", "-")
-        else "_"
-        for c in agency_name
-    ).replace(
-        " ",
-        "_"
+    # Format: Agency Name (Agency Code) - Location - Report Type - Product
+    base_name_raw = (
+        f"{agency_name} ({agency_code}) - {location} - {report_type} - {product}"
     )
 
-    base_name = (
-        f"{agency_code}_{safe_agency_name}"
-    )
+    # Sanitize the filename to remove characters illegal in Windows/Linux file paths
+    base_name = re.sub(r'[\\/*?:"<>|]', "", base_name_raw)
+    # Replace any lingering double spaces with a single space for cleanliness
+    base_name = re.sub(r'\s+', ' ', base_name).strip()
 
     return {
 

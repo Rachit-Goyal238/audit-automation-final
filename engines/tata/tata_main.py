@@ -39,15 +39,24 @@ def generate_report(
     first_row = audit_df.iloc[0]
     agency_code = str(first_row["Agency Code"]).strip()
     agency_name = str(first_row["Agency Name"]).strip()
+    location = str(first_row["Location"]).strip()
 
-    paths = create_output_paths(agency_code, agency_name)
+    pdf_data = extract_pdf_header(pdf_file)
+    report_type = pdf_data.get("agency_type", "Unknown_Report_Type")
+    product = pdf_data.get("product", "Unknown_Product")
+
+    paths = create_output_paths(
+        agency_name=agency_name,
+        agency_code=agency_code,
+        location=location,
+        report_type=report_type,
+        product=product
+    )
 
     generated_excel = paths["excel"]
     generated_pdf = paths["pdf"]
     evidence_pdf = paths["evidence"]
     final_report_pdf = paths["final"]
-
-    pdf_data = extract_pdf_header(pdf_file)
 
     wb = load_workbook(template_file)
     checklist_sheet = wb.sheetnames[0]
