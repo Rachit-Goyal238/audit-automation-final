@@ -47,6 +47,9 @@ def extract_pdf_header(pdf_path):
             elif line == "AGENCY MANAGER":
                 data["agency_manager"] = lines[i + 1]
 
+            elif line == "PRODUCT":
+                data["product"] = lines[i + 1]
+
         except IndexError:
             pass
 
