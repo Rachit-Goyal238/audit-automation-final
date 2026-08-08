@@ -19,11 +19,9 @@ from email_module.templates.signatures import TATA_SIGNATURE
 
 class EmailBuilder:
 
-    def __init__(self, excel_file, metadata=None):
+    def __init__(self, excel_file):
 
         self.excel_file = excel_file
-
-        self.metadata = metadata if metadata else {}
 
         self.loader = ConfigLoader()
 
@@ -123,10 +121,8 @@ class EmailBuilder:
             **{
 
                 "Agency Name": audit_details.agency_name,
-                "Agency Code": audit_details.agency_code,
-                "Report Type": self.metadata.get("report_type", "N/A"),
-                "Location": self.metadata.get("location", "N/A"),
-                "Product": self.metadata.get("product", "N/A"),
+
+                "Agency Code": audit_details.agency_code
 
             }
 
