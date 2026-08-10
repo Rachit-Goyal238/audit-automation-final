@@ -120,7 +120,7 @@ class EmailBuilder:
             template_vars["observations_table"] = self.table_builder.build_closure_observations_table(observations)
             subject_format = self.config["email"].get(
                 "closure_subject_format",
-                "Closure of Audit for {Agency Name} ({Agency Code})"
+                "{Report Type} Audit Closure Meeting || {Location} || {Agency Name} || {Agency Code} || {Product}"
             )
         else:
             raise ValueError(f"Unknown email type: {self.email_type}")
@@ -133,7 +133,7 @@ class EmailBuilder:
         else:
             html += get_tata_signature()
 
-        subject = self.config["email"]["subject_format"].format(
+        subject = subject_format.format(
 
             **{
 
