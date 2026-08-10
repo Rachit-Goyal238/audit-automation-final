@@ -1,9 +1,10 @@
 """
-Extracts all observations where the target column is NOT in the excluded values list (e.g., blank, NA).
+Extracts all observations where Compliance Status = No.
 """
 
 from typing import List
-from models.observation import Observation
+
+from email_module.models.observation import Observation
 
 
 class ObservationsExtractor:
@@ -15,17 +16,17 @@ class ObservationsExtractor:
     def extract(self) -> List[Observation]:
 
         header_row = self._find_header_row()
+
         column_map = self._build_column_map(header_row)
+
         cols = self.config["checklist"]["columns"]
 
         filter_column = self.config["checklist"]["filter"]["column"]
-        
-        # 1. Pull the new exclude_values list from the JSON config
-        # We convert them all to lowercase strings immediately for bulletproof matching
-        raw_exclude_values = self.config["checklist"]["filter"].get("exclude_values", [])
-        exclude_values = [str(val).lower().strip() for val in raw_exclude_values]
+
+        filter_value = self.config["checklist"]["filter"]["value"]
 
         observations = []
+
         row = header_row + 1
 
         while True:
@@ -49,14 +50,12 @@ class ObservationsExtractor:
                 )
             )
 
-            # 2. Clean the extracted status text
-            cleaned_status = status.lower().strip()
-
-            # 3. Check if the status is valid (not in the exclude list and not completely empty)
-            if cleaned_status not in exclude_values and cleaned_status != "":
+            if status.lower() == filter_value.lower():
 
                 observations.append(
+
                     Observation(
+
                         rating_category=self._cell(
                             row,
                             self._require_column(
@@ -64,6 +63,7 @@ class ObservationsExtractor:
                                 cols["rating_category"]
                             )
                         ),
+
                         short_segmentation=self._cell(
                             row,
                             self._require_column(
@@ -71,6 +71,7 @@ class ObservationsExtractor:
                                 cols["short_segmentation"]
                             )
                         ),
+
                         observation=self._cell(
                             row,
                             self._require_column(
@@ -78,6 +79,7 @@ class ObservationsExtractor:
                                 cols["observation"]
                             )
                         ),
+
                         pending_status=self._cell(
                             row,
                             self._require_column(
@@ -85,7 +87,9 @@ class ObservationsExtractor:
                                 cols["pending_status"]
                             )
                         )
+
                     )
+
                 )
 
             row += 1
@@ -97,7 +101,9 @@ class ObservationsExtractor:
         search_text = self.config["checklist"]["table_start_search"]
 
         for row in self.ws.iter_rows():
+
             for cell in row:
+
                 if cell.value is None:
                     continue
 
@@ -109,8 +115,11 @@ class ObservationsExtractor:
     def _normalize_header(self, header):
 
         header = str(header)
+
         header = header.replace("\n", " ")
+
         header = " ".join(header.split())
+
         return header.strip()
 
     def _build_column_map(self, header_row):
@@ -118,6 +127,7 @@ class ObservationsExtractor:
         columns = {}
 
         for cell in self.ws[header_row]:
+
             if cell.value is None:
                 continue
 
@@ -142,6 +152,7 @@ class ObservationsExtractor:
     def _require_column(self, column_map, column_name):
 
         if column_name not in column_map:
+
             available = "\n".join(column_map.keys())
 
             raise Exception(
