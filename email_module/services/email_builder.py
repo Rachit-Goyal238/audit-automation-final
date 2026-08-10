@@ -127,8 +127,11 @@ class EmailBuilder:
 
         html = template.render(template_vars)
         
-        # Append email signature
-        html += get_tata_signature(audit_details.auditor_name)
+        # Append email signature based on the email type
+        if self.email_type == "Closure Email":
+            html += get_tata_signature(audit_details.auditor_name)
+        else:
+            html += get_tata_signature()
 
         subject = self.config["email"]["subject_format"].format(
 

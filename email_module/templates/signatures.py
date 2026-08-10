@@ -3,12 +3,12 @@ HTML Signatures
 """
 
 
-def get_tata_signature(auditor_name: str) -> str:
+def get_tata_signature(auditor_name: str = "Pawan Kumar") -> str:
     """
     Generates the HTML signature for TATA emails.
 
     Args:
-        auditor_name: The name of the auditor to display.
+        auditor_name: The name of the auditor to display. defaults to "Pawan Kumar".
 
     Returns:
         The HTML signature string.
