@@ -21,9 +21,9 @@
         "table_start_search": "Sr.No.",
 
         "filter": {
-            "column": "Compliance status (Yes / No)",
-            "value": "No"
-        },
+                    "column": "Pending Status (Open/ Closed)",
+                    "exclude_values": ["", "NA", "N/A", "nan", "None"]
+                },
 
         "columns": {
             "sr_no": "Sr.No.",
