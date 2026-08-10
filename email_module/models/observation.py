@@ -13,3 +13,5 @@ class Observation:
     short_segmentation: str
     observation: str
     pending_status: str
+    closure_remarks: str = ""
+    timelines: str = ""

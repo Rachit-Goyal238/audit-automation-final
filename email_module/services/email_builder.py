@@ -15,13 +15,14 @@ from email_module.extractors.observations import ObservationsExtractor
 from email_module.extractors.score_table import ScoreTableExtractor
 
 from email_module.services.table_html import TableHTMLBuilder
-from email_module.templates.signatures import TATA_SIGNATURE
+from email_module.templates.signatures import get_tata_signature
 
 class EmailBuilder:
 
-    def __init__(self, excel_file, metadata=None):
+    def __init__(self, excel_file, metadata=None, email_type="Report Email"):
 
         self.excel_file = excel_file
+        self.email_type = email_type
 
         self.metadata = metadata if metadata else {}
 
@@ -95,28 +96,39 @@ class EmailBuilder:
             loader=FileSystemLoader(str(templates_dir))
         )
 
-        template = env.get_template(
-            "tata_email.html"
-        )
+        template_vars = {
+            "audit_date": audit_details.audit_date,
+            "auditor_name": audit_details.auditor_name,
+            "final_rating": score_summary["final_rating"],
+        }
 
-        html = template.render(
+        # Generate HTML tables for the report email
+        template_vars["audit_details_table"] = self.table_builder.build_audit_table(audit_details)
 
-            audit_date=audit_details.audit_date,
+        if self.email_type == "Report Email":
+            template = env.get_template("tata_email.html")
+            subject_format = self.config["email"]["subject_format"]
 
-            auditor_name=audit_details.auditor_name,
+            # Generate the standard observations table
+            template_vars["observations_table"] = self.table_builder.build_observations_table(observations)
 
-            final_rating=score_summary["final_rating"],
+            # Score table is only for the report email
+            template_vars["score_table"] = self.table_builder.build_score_table(score_data)
 
-            audit_details_table=audit_html,
+        elif self.email_type == "Closure Email":
+            template = env.get_template("tata_closure_email.html")
+            template_vars["observations_table"] = self.table_builder.build_closure_observations_table(observations)
+            subject_format = self.config["email"].get(
+                "closure_subject_format",
+                "Closure of Audit for {Agency Name} ({Agency Code})"
+            )
+        else:
+            raise ValueError(f"Unknown email type: {self.email_type}")
 
-            observations_table=observation_html,
-
-            score_table=score_html
-
-        )
+        html = template.render(template_vars)
         
         # Append email signature
-        html += TATA_SIGNATURE
+        html += get_tata_signature(audit_details.auditor_name)
 
         subject = self.config["email"]["subject_format"].format(
 

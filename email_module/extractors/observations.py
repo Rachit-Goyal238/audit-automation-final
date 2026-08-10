@@ -84,6 +84,20 @@ class ObservationsExtractor:
                                 column_map,
                                 cols["pending_status"]
                             )
+                        ),
+                        closure_remarks=self._cell(
+                            row,
+                            self._require_column(
+                                column_map,
+                                cols["closure_remarks"]
+                            )
+                        ),
+                        timelines=self._cell(
+                            row,
+                            self._require_column(
+                                column_map,
+                                cols["timelines"]
+                            )
                         )
                     )
                 )

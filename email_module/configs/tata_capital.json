@@ -30,7 +30,9 @@
             "rating_category": "Rating Category",
             "short_segmentation": "Short Segmentation",
             "observation": "Observation",
-            "pending_status": "Pending Status (Open/ Closed)"
+            "pending_status": "Pending Status (Open/ Closed)",
+            "closure_remarks": "Closing Meeting Comments",
+            "timelines": "Timelines for Non-Closure Point"
         }
     },
 

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<style>
+
+body{
+    font-family:Calibri,Arial,sans-serif;
+    font-size:15px;
+    color:#000;
+    line-height:1.35;
+}
+
+table{
+    border-collapse:collapse;
+    margin-bottom: 15px; /* Adds a controlled, clean space directly below every table */
+}
+
+
+</style>
+
+</head>
+
+<body>
+
+<p>Dear Sir/Madam,</p>
+
+<p>
+Greetings of the day!
+</p>
+
+<p>
+Please find below mentioned observations noted during the audit conducted for your agency. 
+The audit has been completed, and as discussed during the audit closure meeting, the points listed below have been closed or will be implemented by you within the agreed timelines. 
+These observations were reviewed with you at the time of audit completion, and your responses have been duly recorded in the "Closing Meeting Comments" column of the observation sheet.
+</p>
+
+<p>
+Kindly acknowledge the receipt of this communication.
+</p>
+
+<h3 style="
+    font-size:15px !important;
+    font-family:Calibri, Arial, sans-serif;
+    font-weight:bold;
+    margin:15px 0 8px 0;
+    line-height:1.2;
+">
+    <u>Agency details :</u>
+</h3>
+
+{{ audit_details_table }}
+
+<!-- Removed <br> tags. CSS now handles the gaps safely -->
+<h3 style="
+    font-size:15px !important;
+    font-family:Calibri, Arial, sans-serif;
+    font-weight:bold;
+    margin:15px 0 8px 0;
+    line-height:1.2;
+">
+    <u>Allocation :</u>
+</h3>
+
+<h3 style="
+    font-size:15px !important;
+    font-family:Calibri, Arial, sans-serif;
+    font-weight:bold;
+    margin:15px 0 8px 0;
+    line-height:1.2;
+">
+    <u>Key Observations:</u>
+</h3>
+
+{{ observations_table }}
+
+<p>
+Note: The observations mentioned above are provisional and may change based on the review of supporting evidence and backend data. 
+Any additional observations, if identified, will be included in the final report.
+</p>
+
+</body>
+
+</html>

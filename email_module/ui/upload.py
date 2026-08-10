@@ -9,7 +9,15 @@ def render():
     st.subheader("Email Configuration")
 
     st.selectbox("Client", ["TATA Capital"], disabled=True)
-
+    email_type = st.selectbox(
+        "Email Type",
+        [
+            "Report Email",
+            "Closure Email"
+        ],
+        key="email_type"
+    )
+    email["email_type"] = email_type   
     if not st.session_state.get("downloads"):
         st.info("Please generate an audit report in the first tab to configure the email.")
         return
@@ -24,15 +32,20 @@ def render():
     metadata = st.session_state.get("report_metadata", {})
 
     # Prevent rebuilding every rerun
-    if email.get("result") is None or email.get("filename") != excel_file.name:
+    if (
+        email["result"] is None
+        or email["filename"] != excel_file.name
+        or email["email_type"] != email.get("generated_for_type")
+    ):
         with st.spinner("Extracting data and generating Email Preview..."):
-            builder = EmailBuilder(excel_file, metadata)
+            builder = EmailBuilder(excel_file, metadata, email_type=email["email_type"])
             result = builder.build()
 
         email["result"] = result
         email["subject"] = result.get("subject", f"Audit Report - {excel_file.name}")
         email["filename"] = excel_file.name
         email["file_bytes"] = downloads["excel"]
+        email["generated_for_type"] = email["email_type"]
 
     st.divider()
     st.subheader("Email Details")
