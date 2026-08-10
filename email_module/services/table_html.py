@@ -387,7 +387,81 @@ class TableHTMLBuilder:
 
         html += "</table>"
 
+
         return html
+
+    def build_closure_observations_table(self, observations):
+
+        html = f"""
+        <table style="{self.TABLE_STYLE_2}">
+
+            <tr>
+
+                <th style="{self._header_style()} width:12%;">
+                    Rating Category
+                </th>
+
+                <th style="{self._header_style()} width:15%;">
+                    Short Segmentation
+                </th>
+
+                <th style="{self._header_style()} width:25%;">
+                    Observation
+                </th>
+
+                <th style="{self._header_style()} width:18%;">
+                    Closure Remarks
+                </th>
+
+                <th style="{self._header_style()} width:12%; text-align:center;">
+                    Pending Status<br>(Open/Closed)
+                </th>
+
+                <th style="{self._header_style()} width:18%;">
+                    Timelines for non-closure points
+                </th>
+
+            </tr>
+        """
+
+        for obs in observations:
+
+            html += f"""
+
+            <tr>
+
+                <td style="{self._cell_style()}">
+                    {obs.rating_category}
+                </td>
+
+                <td style="{self._cell_style()}">
+                    {obs.short_segmentation}
+                </td>
+
+                <td style="{self._cell_style()}">
+                    {str(obs.observation).replace(chr(10), "<br>")}
+                </td>
+
+                <td style="{self._cell_style()}">
+                    {str(obs.closure_remarks).replace(chr(10), "<br>")}
+                </td>
+
+                <td style="{self._cell_style()}">
+                    {str(obs.pending_status).replace(chr(10), "<br>")}
+                </td>
+
+                <td style="{self._cell_style()} text-align:center;">
+                    {obs.timelines}
+                </td>
+
+            </tr>
+
+            """
+
+        html += "</table>"
+
+        return html
+    
     def _label_style(self):
 
         return f"""
