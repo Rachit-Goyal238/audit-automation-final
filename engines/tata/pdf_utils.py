@@ -216,7 +216,18 @@ if __name__ == "__main__":
 
     finally:
         # 4. Terminate LibreOffice and clean up files
-        lo_process.terminate()
-        lo_process.wait()
+        if lo_process.poll() is None:  # Check if the process is still running
+            try:
+                # First, try to terminate gracefully
+                lo_process.terminate() 
+                # Wait up to 10 seconds for it to shut down on its own
+                lo_process.wait(timeout=10) 
+                print("LibreOffice process terminated gracefully.")
+            except subprocess.TimeoutExpired:
+                # If it doesn't shut down in time, force-kill it
+                print("LibreOffice process did not terminate gracefully, forcing shutdown.")
+                lo_process.kill()
+                lo_process.wait() # Wait for the kill to complete
+
         if os.path.exists(pyuno_script):
             os.remove(pyuno_script)
