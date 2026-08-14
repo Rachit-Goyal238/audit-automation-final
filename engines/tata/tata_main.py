@@ -7,6 +7,7 @@ from openpyxl import load_workbook
 
 from engines.tata.report_utils import create_output_paths
 from engines.tata.pdf_utils import extract_pdf_header, extract_evidence_pages, merge_pdfs, excel_to_pdf
+from engines.tata.lock_utils import file_lock
 from engines.tata.excel_utils import populate_headers, populate_checklist
 
 def generate_report(
@@ -17,14 +18,15 @@ def generate_report(
     pdf_file,
     annexure_pdf=None
 ):
+    # Define a lock file path in a writable directory
+    output_folder = "output"
+    os.makedirs(output_folder, exist_ok=True)
+    lock_file = os.path.join(output_folder, "soffice.lock")
 
     with open("templates.json", "r", encoding="utf-8") as f:
         template_repository = json.load(f)
 
     template_file = template_repository[client][template_type]
-
-    output_folder = "output"
-    os.makedirs(output_folder, exist_ok=True)
 
     df = pd.read_excel(master_file, dtype=str, keep_default_na=False)
     df.columns = df.columns.str.strip()
@@ -108,27 +110,29 @@ def generate_report(
     gc.collect() # Force Python to immediately return RAM to the OS
     # ---------------------------------------------------------
 
-    excel_to_pdf(generated_excel, generated_pdf)
-    print("PDF created")
+    # Use the lock to ensure only one soffice process runs at a time
+    with file_lock(lock_file):
+        excel_to_pdf(generated_excel, generated_pdf)
+        print("PDF created")
 
-    extract_evidence_pages(pdf_file, evidence_pdf)
-    print("Evidence PDF created")
+        extract_evidence_pages(pdf_file, evidence_pdf)
+        print("Evidence PDF created")
 
-    if annexure_pdf:
-        merge_pdfs(generated_pdf, evidence_pdf, annexure_pdf, final_report_pdf)
-    else:
-        merge_pdfs(generated_pdf, evidence_pdf, None, final_report_pdf)
+        if annexure_pdf:
+            merge_pdfs(generated_pdf, evidence_pdf, annexure_pdf, final_report_pdf)
+        else:
+            merge_pdfs(generated_pdf, evidence_pdf, None, final_report_pdf)
 
-    print("Final report created")
+        print("Final report created")
 
-    return {
-        "excel": generated_excel,
-        "pdf": generated_pdf,
-        "evidence": evidence_pdf,
-        "final": final_report_pdf,
-        "metadata": {
-            "location": location,
-            "report_type": report_type,
-            "product": product
+        return {
+            "excel": generated_excel,
+            "pdf": generated_pdf,
+            "evidence": evidence_pdf,
+            "final": final_report_pdf,
+            "metadata": {
+                "location": location,
+                "report_type": report_type,
+                "product": product
+            }
         }
-    }

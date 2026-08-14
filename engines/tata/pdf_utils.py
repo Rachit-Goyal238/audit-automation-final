@@ -6,9 +6,16 @@ import json
 import subprocess
 import shutil
 import time
+import socket
 
 from pypdf import PdfReader, PdfWriter
 
+def find_free_port():
+    """Finds and returns an available TCP port."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
 
 def extract_pdf_header(pdf_path):
     pdf = fitz.open(pdf_path)
@@ -110,6 +117,7 @@ def excel_to_pdf(excel_path, pdf_path):
     pdf_abs = os.path.abspath(pdf_path)
 
     # 1. Dynamically write the PyUNO script with a Connection Retry Loop
+    free_port = find_free_port()
     pyuno_script = os.path.join(output_dir, "pyuno_converter.py")
     with open(pyuno_script, "w") as f:
         f.write("""
@@ -119,7 +127,7 @@ import os
 import sys
 import time
 
-def convert(input_excel, output_pdf):
+def convert(input_excel, output_pdf, port):
     try:
         localContext = uno.getComponentContext()
         resolver = localContext.ServiceManager.createInstanceWithContext("com.sun.star.bridge.UnoUrlResolver", localContext)
@@ -128,7 +136,7 @@ def convert(input_excel, output_pdf):
         ctx = None
         for _ in range(60):  # INCREASED TO 60 SECONDS
             try:
-                ctx = resolver.resolve("uno:socket,host=127.0.0.1,port=2002;urp;StarOffice.ComponentContext")
+                ctx = resolver.resolve(f"uno:socket,host=127.0.0.1,port={port};urp;StarOffice.ComponentContext")
                 break
             except Exception:
                 time.sleep(1)
@@ -168,7 +176,7 @@ def convert(input_excel, output_pdf):
         sys.exit(1)
 
 if __name__ == "__main__":
-    convert(sys.argv[1], sys.argv[2])
+    convert(sys.argv[1], sys.argv[2], sys.argv[3])
 """)
 
     # 2. Boot LibreOffice with a unique, writable temporary profile so it doesn't crash
@@ -184,7 +192,7 @@ if __name__ == "__main__":
             "--nofirststartwizard", 
             "--nologo", 
             "--norestore", 
-            "--accept=socket,host=127.0.0.1,port=2002;urp;"
+            f"--accept=socket,host=127.0.0.1,port={free_port};urp;"
         ]
     )
 
@@ -197,7 +205,7 @@ if __name__ == "__main__":
         env["PYTHONPATH"] = "/usr/lib/python3/dist-packages"
         
         result = subprocess.run(
-            ["/usr/bin/python3", pyuno_script, excel_abs, pdf_abs], 
+            ["/usr/bin/python3", pyuno_script, excel_abs, pdf_abs, str(free_port)], 
             capture_output=True,
             text=True,
             env=env
