@@ -41,7 +41,27 @@ def generate_report(
     first_row = audit_df.iloc[0]
     agency_code = str(first_row["Agency Code"]).strip()
     agency_name = str(first_row["Agency Name"]).strip()
-    location = str(first_row["Location"]).strip()
+
+    location = None
+    # Define variants of the location column name for flexible matching.
+    possible_location_columns = [
+        "Location", "location/ city", "location / city", "city/location", "city"
+    ]
+
+    # Create a mapping from lowercased/stripped column names to their original names
+    column_map = {str(col).strip().lower(): col for col in first_row.index}
+
+    for col_variant in possible_location_columns:
+        cleaned_variant = col_variant.strip().lower()
+        if cleaned_variant in column_map:
+            original_col_name = column_map[cleaned_variant]
+            location_value = first_row[original_col_name]
+            if pd.notna(location_value) and str(location_value).strip():
+                location = str(location_value).strip()
+                break
+
+    if location is None:
+        raise KeyError("Could not find a valid location column. Searched for variants: " + ", ".join(possible_location_columns))
 
     pdf_data = extract_pdf_header(pdf_file)
     report_type = pdf_data.get("agency_type", "Unknown_Report_Type")

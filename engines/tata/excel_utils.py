@@ -143,9 +143,11 @@ def populate_checklist(
 
         ws[f"J{excel_row}"] = parsed["timeline"]
 
-        if status.upper() in [
-            "NO",
-            "NA"
+        # Filter on the "Pending Status" column (I) for "open" or "closed".
+        pending_status = parsed["status"]
+        if pending_status.lower() in [
+            "open",
+            "closed"
         ]:
 
             for col in [
