@@ -45,7 +45,7 @@ def generate_report(
     location = None
     # Define variants of the location column name for flexible matching.
     possible_location_columns = [
-        "Location", "location/ city", "location / city", "city/location", "city"
+        "Location", "location/ city", "location / city", "city/location", "city", "Location/City"
     ]
 
     # Create a mapping from lowercased/stripped column names to their original names
