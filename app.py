@@ -31,6 +31,28 @@ def compress_pdf(file_path: str, max_size_mb: int = 10) -> str:
     
     try:
         doc = fitz.open(file_path)
+        
+        # --- ENHANCED COMPRESSION START ---
+        # 1. Strip out unused metadata, thumbnails, and embedded files
+        doc.scrub(
+            metadata=True,
+            xml_metadata=True,
+            attached_files=True,
+            thumbnails=True,
+            reset_fields=True
+        )
+        
+        # 2. Downsample and compress high-res images (the main cause of bloated PDFs)
+        # quality: JPEG quality (lower = smaller file, 0-100)
+        # dpi_threshold: only images > this DPI are touched
+        # dpi_target: resize the image to this DPI
+        doc.rewrite_images(
+            quality=30, 
+            dpi_threshold=150, 
+            dpi_target=72
+        )
+        # --- ENHANCED COMPRESSION END ---
+        
         # garbage=4: Remove all unused objects/streams
         # deflate=True: Compress streams
         # clean=True: Clean and sanitize content streams
