@@ -78,8 +78,13 @@ def extract_evidence_pages(input_pdf, output_pdf):
                 from_page=page_num,
                 to_page=page_num
             )
-        )
-        print("WARNING: No evidence pages matched the pattern. A placeholder page was created.")
+            inserted = True
+
+    if not inserted:
+        # Create a single page saying "No evidence pages found"
+        # to avoid the "cannot save with zero pages" RuntimeError
+        page = evidence_pdf.new_page()
+        page.insert_text((50, 50), "No evidence pages found in the report.")
 
     evidence_pdf.save(output_pdf)
     evidence_pdf.close()
