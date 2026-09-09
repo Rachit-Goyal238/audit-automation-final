@@ -18,7 +18,7 @@ def get_tata_signature(auditor_name: str = "Pawan Kumar") -> str:
 
     <p style="
     margin:0;
-    font-family:'Times New Roman', Times, serif;
+    font-family:Times New Roman", Times, serif;
     font-size:15px;
     ">
     Thanks & Regards,
@@ -27,7 +27,7 @@ def get_tata_signature(auditor_name: str = "Pawan Kumar") -> str:
     <table style="
     margin-top:10px;
     border-collapse:collapse;
-    font-family:'Times New Roman', Times, serif;
+    font-family:Times New Roman", Times, serif;
     ">
 
     <tr>
@@ -48,7 +48,7 @@ def get_tata_signature(auditor_name: str = "Pawan Kumar") -> str:
     ">
 
     <div style="
-    font-size:20px;
+    font-size:22px;
     font-weight:bold;
     color:#666666;
     ">
@@ -56,7 +56,7 @@ def get_tata_signature(auditor_name: str = "Pawan Kumar") -> str:
     </div>
 
     <div style="
-    font-size:15px;
+    font-size:17px;
     font-weight:bold;
     color:#666666;
     margin-top:3px;
@@ -66,7 +66,7 @@ def get_tata_signature(auditor_name: str = "Pawan Kumar") -> str:
 
     <div style="
     margin-top:18px;
-    font-size:14px;
+    font-size:15px;
     color:#333333;
     ">
     +91 9999934588 |
@@ -90,7 +90,7 @@ def get_tata_signature(auditor_name: str = "Pawan Kumar") -> str:
     margin-top:12px;
     font-size:11px;
     line-height:18px;
-    font-family:'Times New Roman', Times, serif;
+    font-family:Times New Roman", Times, serif;
     ">
 
     <span style="color:red;">
@@ -117,7 +117,7 @@ def get_tata_signature(auditor_name: str = "Pawan Kumar") -> str:
     font-style:italic;
     font-weight:bold;
     font-size:14px;
-    font-family:'Times New Roman', Times, serif;
+    font-family:Times New Roman", Times, serif;
     ">
     Please do not print this email unless it is absolutely necessary.
     </p>
