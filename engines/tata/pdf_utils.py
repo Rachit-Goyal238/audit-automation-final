@@ -67,6 +67,7 @@ def extract_evidence_pages(input_pdf, output_pdf):
     pdf = fitz.open(input_pdf)
     evidence_pdf = fitz.open()
 
+    inserted = False
     for page_num in range(len(pdf)):
         page = pdf[page_num]
         text = page.get_text()
@@ -77,15 +78,6 @@ def extract_evidence_pages(input_pdf, output_pdf):
                 from_page=page_num,
                 to_page=page_num
             )
-
-    if len(evidence_pdf) == 0:
-        # No evidence pages matched — insert a blank placeholder page
-        # so the pipeline doesn't crash downstream.
-        blank_page = evidence_pdf.new_page(width=595, height=842)  # A4 size
-        blank_page.insert_text(
-            (72, 72),
-            "No observation/evidence pages were found in the uploaded PDF.",
-            fontsize=14,
         )
         print("WARNING: No evidence pages matched the pattern. A placeholder page was created.")
 
