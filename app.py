@@ -83,10 +83,12 @@ with st.sidebar:
     st.header("Authentication")
     if credentials:
         st.success("✅ Signed in to Google")
-        if st.button("Sign Out"):
-            if "google_credentials" in st.session_state:
-                del st.session_state["google_credentials"]
-            st.rerun()
+        oauth_url = os.getenv("OAUTH_URL", "http://localhost:5000")
+        st.link_button(
+            "Sign Out",
+            f"{oauth_url}/logout",
+            use_container_width=True
+        )
     else:
         st.warning("Not signed in to Google")
         st.info("Sign in to generate email drafts.")

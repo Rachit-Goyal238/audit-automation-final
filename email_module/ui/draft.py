@@ -43,4 +43,10 @@ def render():
             )
 
         except Exception as e:
-            st.exception(e)
+            from google.auth.exceptions import RefreshError
+            if isinstance(e, RefreshError):
+                st.error("Your Google authentication has expired. Please use the 'Sign Out' button in the sidebar and sign in again.")
+                if "google_credentials" in st.session_state:
+                    del st.session_state["google_credentials"]
+            else:
+                st.exception(e)
