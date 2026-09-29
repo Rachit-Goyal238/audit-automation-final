@@ -6,13 +6,14 @@ from flask import (
     Flask,
     jsonify,
     redirect,
+    request,
     url_for,
     session
 )
 from authlib.integrations.flask_client import OAuth
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from email_module.oauth.token_store import get_token, save_token
+from email_module.oauth.token_store import get_token, save_token, delete_token
 
 load_dotenv()
 
@@ -115,6 +116,12 @@ def login():
 
 @app.route("/logout")
 def logout():
+
+    # Delete the token from the store so the URL's ?token= can no longer
+    # be used to silently re-authenticate after sign-out.
+    token_id = request.args.get("token_id")
+    if token_id:
+        delete_token(token_id)
 
     session.clear()
 

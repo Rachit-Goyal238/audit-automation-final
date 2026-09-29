@@ -63,25 +63,18 @@ class GmailAuthenticator:
 
     def authenticate(self):
 
-        # Already authenticated during this Streamlit session
+        # Already authenticated during this Streamlit session (no reload)
         if "google_credentials" in st.session_state:
-
             return st.session_state["google_credentials"]
 
-        # Returned from OAuth server
+        # ?token= is present — either fresh login or a page reload.
+        # We intentionally do NOT clear the query param so that reloads
+        # can re-authenticate without any cookie or extra package.
         token_id = st.query_params.get("token")
 
         if token_id:
-
-            credentials = self._exchange_token(token_id)
-
-            if credentials:
-
-                st.query_params.clear()
-
-                st.rerun()
-
-            return None
+            return self._exchange_token(token_id)
 
         # No credentials available
         return None
+

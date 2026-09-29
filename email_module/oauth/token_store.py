@@ -9,8 +9,9 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-# Token lifetime (seconds)
-TOKEN_TTL = 300  # 5 minutes
+
+# Token lifetime: 8 hours so it survives a normal working session
+TOKEN_TTL = 8 * 60 * 60
 
 _lock = threading.Lock()
 _tokens = {}
@@ -28,10 +29,9 @@ def _cleanup():
 
     for key in expired:
         _tokens.pop(key, None)
+
     if expired:
-        logger.info(
-        f"Removed {len(expired)} expired OAuth token(s)."
-    )
+        logger.info(f"Removed {len(expired)} expired OAuth token(s).")
 
 
 def save_token(token):
@@ -51,30 +51,41 @@ def save_token(token):
             "token": token,
             "created_at": time.time()
         }
-        logger.info(
-        "Temporary OAuth token stored."
-        )
+
+        logger.info("Temporary OAuth token stored.")
+
         return key
 
 
 def get_token(key):
     """
-    Retrieve the token once.
+    Retrieve the token by key.
 
-    Token expires automatically or is removed after first use.
+    The token is NOT deleted on retrieval so that page reloads
+    can re-authenticate using the same token_id kept in the URL.
+    Tokens expire automatically after TOKEN_TTL seconds.
     """
 
     with _lock:
         _cleanup()
 
-        data = _tokens.pop(key, None)
+        data = _tokens.get(key, None)   # get(), not pop() — keep it alive
 
         if data is None:
-            logger.warning(
-                "Invalid or expired OAuth token requested."
-            )
+            logger.warning("Invalid or expired OAuth token requested.")
             return None
-        logger.info(
-        "OAuth token successfully retrieved."
-        )
+
+        logger.info("OAuth token successfully retrieved.")
+
         return data["token"]
+
+
+def delete_token(key):
+    """
+    Explicitly remove a token. Call this on logout so the
+    token_id in the URL can no longer be used to re-authenticate.
+    """
+    with _lock:
+        removed = _tokens.pop(key, None)
+        if removed:
+            logger.info("OAuth token deleted on logout.")

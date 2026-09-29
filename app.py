@@ -84,9 +84,10 @@ with st.sidebar:
     if credentials:
         st.success("✅ Signed in to Google")
         oauth_url = os.getenv("OAUTH_URL", "http://localhost:5000")
+        token_id = st.query_params.get("token", "")
         st.link_button(
             "Sign Out",
-            f"{oauth_url}/logout",
+            f"{oauth_url}/logout?token_id={token_id}",
             use_container_width=True
         )
     else:
