@@ -89,3 +89,17 @@ def delete_token(key):
         removed = _tokens.pop(key, None)
         if removed:
             logger.info("OAuth token deleted on logout.")
+
+
+def update_token(key, token):
+    """
+    Overwrite the stored token data for an existing key.
+
+    Call this after an access_token refresh so the store stays in sync
+    with the live credentials object. If the key no longer exists
+    (expired or deleted) this is a no-op.
+    """
+    with _lock:
+        if key in _tokens:
+            _tokens[key]["token"] = token
+            logger.info("OAuth token updated after refresh.")

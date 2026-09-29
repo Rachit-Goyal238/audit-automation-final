@@ -11,7 +11,7 @@ OAUTH_URL = os.getenv("INTERNAL_OAUTH_URL", os.getenv("OAUTH_URL", "http://local
 
 class GmailAuthenticator:
 
-    def _create_credentials(self, token):
+    def _create_credentials(self, token, token_id=None):
 
         credentials = Credentials(
             token=token["access_token"],
@@ -21,6 +21,10 @@ class GmailAuthenticator:
             client_secret=CLIENT_SECRET,
             scopes=token["scope"].split(),
         )
+
+        # Stamp the store key so GmailService can write back a refreshed token.
+        if token_id:
+            credentials._token_store_key = token_id
 
         st.session_state["google_credentials"] = credentials
 
@@ -59,7 +63,7 @@ class GmailAuthenticator:
 
         token = response.json()
 
-        return self._create_credentials(token)
+        return self._create_credentials(token, token_id=token_id)
 
     def authenticate(self):
 
