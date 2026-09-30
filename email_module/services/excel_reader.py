@@ -97,17 +97,32 @@ class ExcelReader:
 
     def get_checklist_sheet(self) -> Worksheet:
         """
-        Returns Checklist worksheet.
+        Returns Checklist worksheet (falls back to the 1st sheet if 'Checklist' not found).
         """
-
-        return self.get_sheet("Checklist")
+        if self.workbook is None:
+            raise Exception("Workbook not loaded.")
+            
+        if "Checklist" in self.workbook.sheetnames:
+            return self.get_sheet("Checklist")
+        else:
+            # Fallback to the first sheet
+            return self.get_sheet(self.workbook.sheetnames[0])
 
     def get_score_sheet(self) -> Worksheet:
         """
-        Returns Score Parameters worksheet.
+        Returns Score Parameters worksheet (falls back to the 2nd sheet if not found).
         """
-
-        return self.get_sheet("Score Parameters")
+        if self.workbook is None:
+            raise Exception("Workbook not loaded.")
+            
+        if "Score Parameters" in self.workbook.sheetnames:
+            return self.get_sheet("Score Parameters")
+        else:
+            # Fallback to the second sheet if it exists
+            if len(self.workbook.sheetnames) > 1:
+                return self.get_sheet(self.workbook.sheetnames[1])
+            else:
+                raise Exception("Worksheet 'Score Parameters' not found and no second sheet available to fallback on.")
 
     def get_sheet_names(self) -> list[str]:
         """
@@ -124,23 +139,18 @@ class ExcelReader:
         Validate required worksheets exist.
         """
 
-        required = [
-            "Checklist",
-            "Score Parameters"
-        ]
-
         names = self.get_sheet_names()
-
         missing = []
 
-        for sheet in required:
-
-            if sheet not in names:
-                missing.append(sheet)
+        if "Checklist" not in names and len(names) < 1:
+            missing.append("Checklist")
+            
+        if "Score Parameters" not in names and len(names) < 2:
+            missing.append("Score Parameters")
 
         if missing:
             raise Exception(
-                f"Workbook missing sheet(s): {', '.join(missing)}"
+                f"Workbook missing sheet(s) or fallback sheets: {', '.join(missing)}"
             )
 
         return True
